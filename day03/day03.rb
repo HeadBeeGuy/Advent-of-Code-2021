@@ -1,7 +1,8 @@
 # Advent of Code 2021 - Day 03
-# This is only part 1. I've been trying to do part 2 for the last few days when
-# I have time, but I keep running into errors, edge cases, and realizations
-# that my approach won't work. It's been really frustrating.
+# Part 2 took me a really long time with lots of dead ends and mishaps.
+# I was hoping to do everything in one parse of the array, but I was
+# getting pretty tired of the problem and went with a solution that I'm sure
+# leaves plenty of performance on the table.
 
 input = File.open("input.txt")
 diagnostic_report = input.readlines.map(&:strip)
@@ -36,3 +37,43 @@ bits.keys.sort.each do |position|
 end
 
 puts "The power consumption is #{gamma_rate.to_i(2) * epislon_rate.to_i(2)}"
+
+oxygen_rating = ""
+co2_rating = ""
+
+acc = ""
+candidates = diagnostic_report
+loop do
+  if candidates.length <= 1
+    oxygen_rating = candidates.first
+    break
+  end
+  # This is the first time I've done destructuring in Ruby!
+  zeros, ones = candidates.partition { |a| a.start_with?(acc + "0") }
+  if ones.length >= zeros.length
+    acc += "1"
+    candidates = ones
+  else
+    acc += "0"
+    candidates = zeros
+  end
+end
+
+acc = ""
+candidates = diagnostic_report
+loop do
+  if candidates.length <= 1
+    co2_rating = candidates.first
+    break
+  end
+  zeros, ones = candidates.partition { |a| a.start_with?(acc + "0") }
+  if zeros.length <= ones.length
+    acc += "0"
+    candidates = zeros
+  else
+    acc += "1"
+    candidates = ones
+  end
+end
+
+puts "The life support rating is #{oxygen_rating.to_i(2) * co2_rating.to_i(2)}"
