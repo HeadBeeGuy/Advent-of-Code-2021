@@ -1,27 +1,41 @@
-# Advent of Code 2021 - Day 06 part 1
-# This one took me a while to ponder. I imagined that doing a simple simulation
-# would, by design, make it take unfeasibly long. So I tried to look at it
-# vertically, for lack of a better word. Take each fish, see how many times it
-# has a chance to spawn a new fish in the length of the simulation, then see
-# how many times those fish have chances to spawn fish given their starting dates.
-# Unfortunately, this approach seems to overwhelm Ruby in part 2. Maybe I should 
-# make a linked list data structure?
+# Advent of Code 2021 - Day 06
+# I completely changed my implementation for part 2. I didn't do the most obvious
+# item-by-item array simulation since the problem was probably designed to
+# overwhelm that, but my part 1 solution made an array too big for Ruby to handle.
+# I eventually realized that each fish with the same birthday is essentially
+# identical. If 5 fish all have the same birthday, they make 5 new fish at
+# regular intervals. They never die, so they just reproduce at a fixed rate and
+# the only question is how many offspring their offspring produces over time.
 
 input = File.open("input.txt")
 initial_fish = input.readlines.first.strip.split(",").map(&:to_i)
-days = 80
+total_fish = 0
+days = 256 # change to 80 for part 1
 
-# take all of our initial fish, then work backwards to their initial birth dates
-fish = initial_fish.map{ |i| i -= 8 }
+new_fish_for_date = Hash.new(0) # key: date  value: how many fish are born on this date
 
-fish.each do |fish_birthday|
-  # assuming that each fish we encounter is on its first spawn cycle
-  next_spawn_date = fish_birthday + 9
+# work backwards for the birthdays of the original fish
+initial_fish.each do |fish|
+  total_fish += 1
+  fish_birthday = fish - 8
+  new_fish_for_date[fish_birthday] += 1
+end
 
-  while next_spawn_date <= days do
-    fish.push(next_spawn_date)
-    next_spawn_date += 7
+oldest_fish_day = new_fish_for_date.keys.min
+
+(oldest_fish_day..days).to_a.each do |day|
+  new_fish_today = new_fish_for_date[day]
+  unless new_fish_today == 0
+    # every fish on this day has its original 9 day cycle first
+    spawn_dates = ((day + 9)..days).step(7).to_a
+
+    # the nice thing is, if we're near the end, spawn_dates is an empty Array
+    spawn_dates.each do |date|
+      # make baby fish, who we will track in due course
+      new_fish_for_date[date] += new_fish_today
+      total_fish += new_fish_today
+    end
   end
 end
 
-puts "In the end, there were #{fish.size} fish by day #{days}."
+puts "At the end of day #{days}, there are #{total_fish} fish."
